@@ -50,6 +50,7 @@ class t_automata():
     estado_inicial : t_estado = None
     estados_finales : set[t_estado]= set()
     estado_actual : t_estado = None
+    log = ''
 
 
     def __init__(self, estados : set[t_estado], alfabeto : set[t_simbolo], transicion : t_transicion, estado_inicial : t_estado, estados_finales : set[t_estado]):
@@ -62,23 +63,32 @@ class t_automata():
         self.estados_finales = estados_finales
 
     def leer_cadena(self, cadena, print_log = False):
-        log = f'Estado inicial: {self.estado_inicial}. Cadena: {cadena}'
+        self.log = f'Estado inicial: {self.estado_inicial}. Cadena: {cadena}'
         self.estado_actual = self.estado_inicial
         for paso, simbolo in enumerate(cadena):
+            if simbolo not in self.alfabeto:
+                self.log += f'\nEl símbolo {simbolo} no está en el alfabeto del AFD'
+                if print_log: print(self.log)
+                return False
+                
+
             siguiente_estado = self.transicion[(self.estado_actual, simbolo)]
 
             if not siguiente_estado: 
-                log += f'\nNo existe la transición ({self.estado_actual}, {simbolo}).'
-                if print_log: print(log)
+                self.log += f'\nNo existe la transición ({self.estado_actual}, {simbolo}).'
+                if print_log: print(self.log)
                 return False
 
             cadena_actual = cadena if paso == 0 else cadena_actual[1:]
 
-            log += f'\nPaso {paso}. ({self.estado_actual},{cadena_actual}) ⊢ ({siguiente_estado},{cadena_actual[1:]}).'
+            self.log += f'\nPaso {paso}. ({self.estado_actual},{cadena_actual}) ⊢ ({siguiente_estado},{cadena_actual[1:]}).'
             self.estado_actual = siguiente_estado
-        if print_log: print(log)
+        if print_log: print(self.log)
         return self.estado_actual in self.estados_finales
         
+
+    def ver_log(self):
+        return self.log
     def __str__(self):
         return f"Estados: {self.estados}. \nAlfabeto: {self.alfabeto}. \nFunción de transición: {self.transicion}. \nEstado inicial: {self.estado_inicial}. \nEstados finales: {self.estados_finales}."
     

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href=" {{ url_for('static', filename = 'css/styles.css') }}">
+    <title>Autómata Finito Determinístico</title>
+</head>
+<script>
+    // Guardamos la posición del scroll en el localStorage antes de que la página se recargue
+    window.onbeforeunload = function() {
+        localStorage.setItem('scrollPos', window.scrollY);
+    };
+
+    // Al cargar la página, restauramos la posición del scroll si existe en el localStorage
+    window.onload = function() {
+        var scrollPos = localStorage.getItem('scrollPos');
+        if (scrollPos) {
+            window.scrollTo(0, scrollPos);
+            localStorage.removeItem('scrollPos');  // Limpiamos el valor después de usarlo
+        }
+    };
+</script>
+
+
+<body>
+
+    
+    <div class="container">
+    <div>
+    <!-- Formulario para agregar un estado -->
+    <form method="POST" action="/agregar_estado">
+        <label for="estado">Agregar Estado:</label>
+        <input type="text" id="estado" name="estado" required>
+        <button type="submit">Agregar</button>
+    </form>
+
+    <h2>Estados Actuales:</h2>
+    <ul>
+
+        {% for estado in estados %}
+            <li>
+                {{ estado }}
+                <a href="/eliminar_estado/{{ estado }}" style="color: red; text-decoration: none;">X</a>
+            </li>
+        {% else %}
+            <li>No hay estados registrados.</li>
+        {% endfor %}
+    </ul>
+    </div>
+    
+    <div>
+        <!-- Formulario para seleccionar el estado inicial -->
+        <form method="POST" action="/seleccionar_estado_inicial">
+            <label for="estado_inicial">Seleccionar Estado Inicial:</label>
+            <select name="estado_inicial" id="estado_inicial">
+                <option value="">-</option>
+                {% for estado in estados %}
+                    <option value="{{ estado }}">{{ estado }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Seleccionar Estado Inicial</button>
+            <p> Estado inicial: {{ estado_inicial}}</p>
+        </form>
+
+    </div>
+
+    <div>
+        <h2>Alfabeto</h2>
+        <p>Agregue todos los caracteres del alfabeto como una cadena</p>
+        <form method="POST" action="/modificar_alfabeto">
+            <label for="alfabeto">Alfabeto:</label>
+            <input type="text" id="alfabeto" name="alfabeto" required>
+            <button type="submit">Agregar</button>
+        </form>
+        <p> Alfabeto actual: {{ alfabeto }} </p>
+    </div>
+
+    <div>
+        <h2>Seleccionar Estados Finales</h2>
+        <form method="POST" action="/agregar_estado_final">
+            <p>Seleccione los estados finales:</p>
+            {% for estado in estados %}
+                <div>
+                    <input type="checkbox" id="estado_final_{{ estado }}" name="estado_final" value="{{ estado }}"
+                    {% if estado in estados_finales %} checked {% endif %}>
+                    <label for="estado_final_{{ estado }}">{{ estado }}</label>
+                </div>
+            {% endfor %}
+            <button type="submit">Actualizar Estados Finales</button>
+        </form>
+        <p>Estados finales actuales: {{ estados_finales }} </p>
+    </div>
+
+
+    <div>
+
+        <h2>AFD - Definir Transiciones</h2>
+
+        <!-- Formulario para agregar las transiciones -->
+        <form method="POST" action="/agregar_transicion">
+            <h2>Definir Transiciones:</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Estado / Alfabeto</th>
+                        {% for simbolo in alfabeto %}
+                            <th>{{ simbolo }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for estado in estados %}
+                        <tr>
+                            <td>{{ estado }}</td>
+                            {% for simbolo in alfabeto %}
+                                <td>
+                                    <select name="transicion_{{ estado }}_{{ simbolo }}">
+                                        <option value="">-</option>
+                                        {% for siguiente_estado in estados %}
+                                            <option value="{{ siguiente_estado }}">{{ siguiente_estado }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit">Guardar Transiciones</button>
+        </form>
+
+        <h2>Transiciones Definidas:</h2>
+
+        {% for transicion in transiciones %}
+            <li>
+                {{ transicion }}
+                <a href="/eliminar_transicion/{{ transicion[0] }}/{{ transicion[1]}}" style="color: red; text-decoration: none;">X</a>
+            </li>
+        {% else %}
+            <li>No hay transiciones registrados.</li>
+        {% endfor %}
+
+    </div>
+
+
+    <div class="pertenece">
+        <h2> Cadena pertenece.</h2>
+
+        <form method="POST" action="/chequear_cadena">
+            <label for="cadena">Cadena:</label>
+            <input type="text" id="cadena" name="cadena" required>
+            <button type="submit" {% if not automata_armado %} disabled {% endif%}>Chequear</button>
+        </form>
+
+        {{ mensaje }}
+        <h3> Log </h3>
+        
+        <pre>{{ log }} </pre>
+        
+    </div>
+
+    </div>
+    
+
+</body>
+</html>
